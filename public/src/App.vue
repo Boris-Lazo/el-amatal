@@ -105,10 +105,10 @@ body {
     left: 50%;
     transform: translate(-50%, -50%);
     z-index: 3;
-    max-width: 900px;
+    max-width: 90rem;   
     width: 90%;
-    padding: 2.5rem;
-    background-color: rgba(0, 0, 0, 0.7);
+    padding: 1.5rem;
+    background-color: rgba(0, 0, 0, 0.2);
     border-radius: 15px;
     backdrop-filter: blur(8px);
     text-align: center;
@@ -118,7 +118,7 @@ body {
 .hero-content h2 {
     color: var(--color-secundario);
     font-size: clamp(1.5rem, 5vw, 2.5rem);
-    margin-bottom: 1.5rem;
+    margin-bottom: 0.5rem;
     border-bottom: none;
     padding-bottom: 0;
 }

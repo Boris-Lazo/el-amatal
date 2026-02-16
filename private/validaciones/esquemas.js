@@ -21,7 +21,7 @@ const esquemaAlbum = z.object({
   descripcion: z
     .string()
     .max(500, 'La descripción no puede exceder los 500 caracteres')
-    .optional()
+    .default('')
     .transform((val) => (val ? sanearTexto(val) : '')),
 });
 

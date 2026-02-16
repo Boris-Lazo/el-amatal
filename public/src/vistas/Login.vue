@@ -59,6 +59,7 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import api from '@/api/clienteApi';
+import { estadoSesion } from '@/utilidades/sesion';
 
 const router = useRouter();
 const correo = ref('');
@@ -74,6 +75,7 @@ async function manejarEntrada() {
     const data = await api.enviar('/api/entrar', { usuario: correo.value, contrasena: contrasena.value });
     localStorage.setItem('token', data.token);
     localStorage.setItem('usuario', correo.value);
+    estadoSesion.actualizar();
     router.push('/admin');
   } catch (err) {
     alert(err.mensaje || err.message || 'Error al iniciar sesión');

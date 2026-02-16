@@ -19,10 +19,10 @@ const validador = (esquema) => {
     } catch (error) {
       if (error instanceof z.ZodError) {
         // Formatear errores de Zod de manera legible
-        const detalles = error.errors.map((err) => ({
+        const detalles = error.errors?.map((err) => ({
           campo: err.path.join('.'),
           mensaje: err.message,
-        }));
+        })) || [];
 
         next(new ErrorValidacion('Datos de entrada inválidos', detalles));
       } else {

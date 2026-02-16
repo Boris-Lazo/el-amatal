@@ -91,10 +91,13 @@ onMounted(async () => {
 <style scoped>
 .documentos-page {
     padding-top: 100px; /* Espacio para navbar fija */
+    flex: 1;
+    display: flex;
+    flex-direction: column;
 }
 
 .documentos-main {
-    min-height: calc(100vh - 200px);
+    flex: 1;
     padding-top: 0;
 }
 

@@ -56,6 +56,22 @@ class RepositorioAlbum extends RepositorioBase {
   async eliminarPorId(id) {
     return this.ejecutar('DELETE FROM albums WHERE id = ?', [id]);
   }
+
+  /**
+   * Actualiza un álbum existente
+   */
+  async actualizar(id, album) {
+    return this.ejecutar(
+      'UPDATE albums SET titulo = ?, fecha = ?, descripcion = ?, fotos = ? WHERE id = ?',
+      [
+        album.titulo,
+        album.fecha,
+        album.descripcion,
+        JSON.stringify(album.fotos),
+        id,
+      ]
+    );
+  }
 }
 
 module.exports = RepositorioAlbum;

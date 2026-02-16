@@ -21,8 +21,8 @@
         <li><router-link to="/" @click="menuAbierto = false">INICIO</router-link></li>
         <li><router-link to="/eventos" title="Fotografías de los eventos de la escuela" @click="menuAbierto = false">EVENTOS</router-link></li>
         <li><router-link to="/documentos" title="Documentos de rendición de cuentas" @click="menuAbierto = false">DOCUMENTOS</router-link></li>
-        <li v-if="!estaAutenticado"><router-link to="/entrar" title="Entrar" @click="menuAbierto = false">LOGIN</router-link></li>
-        <li v-else><router-link to="/admin" @click="menuAbierto = false">ADMIN</router-link></li>
+        <li v-if="!estaAutenticado"><router-link to="/entrar" title="Entrar" @click="menuAbierto = false">INICIAR SESIÓN</router-link></li>
+        <li v-else><router-link to="/admin" @click="menuAbierto = false">ADMINISTRADOR</router-link></li>
       </ul> 
     </div>
   </nav>

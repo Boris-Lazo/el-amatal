@@ -51,6 +51,27 @@ class ControladorAlbum {
       next(error);
     }
   }
+
+  /**
+   * Actualizar un álbum existente
+   */
+  async actualizarAlbum(req, res, next) {
+    try {
+      const { id } = req.params;
+      const { titulo, fecha, descripcion, fotosExistentes } = req.body;
+      const archivos = req.files || [];
+
+      const album = await this.servicioAlbum.actualizarAlbum(
+        id,
+        { titulo, fecha, descripcion, fotosExistentes },
+        archivos
+      );
+
+      res.json({ ok: true, album });
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 module.exports = ControladorAlbum;

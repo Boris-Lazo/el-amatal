@@ -3,16 +3,16 @@
     <div class="admin-topbar">
       <div class="admin-topbar-content">
         <div class="admin-brand">
-          <h1>Panel de Control</h1>
+          <h1>Panel Administrativo</h1>
           <p class="admin-user-info">Sesión: <span id="admin-usuario">{{ usuario }}</span></p>
         </div>
 
         <button class="admin-menu-toggle" @click="menuAbierto = !menuAbierto">☰</button>
 
-        <div class="admin-actions" :class="{ 'show': menuAbierto }">
-          <router-link to="/" class="btn-secondary">Volver al Sitio</router-link>
-          <button @click="cerrarSesion" class="btn-danger">Cerrar Sesión</button>
-        </div>
+          <div class="admin-actions" :class="{ 'show': menuAbierto }">
+            <router-link to="/" class="btn-secondary">Volver al Sitio</router-link>
+            <button @click="abrirModalCerrarSesion" class="btn-danger">Cerrar Sesión</button>
+          </div>
       </div>
     </div>
 
@@ -51,7 +51,7 @@
           </button>
           <div v-show="pestañaActiva === 'albumes'" class="tab-content active">
             <div class="admin-card">
-              <h3>📸 Nuevo Álbum</h3>
+              <h3>{{ modoEdicion ? '✏️ Editar Álbum' : '📸 Nuevo Álbum' }}</h3>
               <form @submit.prevent="crearAlbum" class="admin-form">
                 <div class="form-row">
                   <div class="form-group">
@@ -65,17 +65,38 @@
                 </div>
                 <div class="form-group">
                   <label>Descripción</label>
-                  <textarea v-model="formularioAlbum.descripcion" rows="3" placeholder="Descripción breve del evento..."></textarea>
+                  <textarea v-model="formularioAlbum.descripcion" rows="3" placeholder="Descripción breve del evento..." maxlength="500"></textarea>
+                  <div class="character-counter" :class="{ 'limit-warning': formularioAlbum.descripcion.length > 450 }">
+                    {{ formularioAlbum.descripcion.length }}/500 caracteres
+                  </div>
                 </div>
                 <div class="form-group">
                   <label>Fotos</label>
+                  
+                  <!-- Fotos existentes (solo en modo edición) -->
+                  <div v-if="modoEdicion && fotosExistentes.length > 0" class="fotos-existentes">
+                    <p style="font-size: 0.9rem; color: #666; margin-bottom: 0.5rem;">Fotos actuales del álbum:</p>
+                    <div class="grid-fotos-existentes">
+                      <div v-for="(foto, index) in fotosExistentes" :key="foto" class="foto-existente-item">
+                        <img :src="`/api/subidas/${albumEditando.id}/${foto}`" :alt="`Foto ${index + 1}`">
+                        <button type="button" @click="eliminarFotoExistente(index)" class="btn-eliminar-foto" title="Eliminar foto">
+                          <span>✕</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Input para nuevas fotos -->
                   <div class="file-input-wrapper">
-                    <input type="file" id="input-fotos" multiple accept="image/*" @change="manejarCambioFotos" required>
-                    <div class="file-input-label">Seleccionar Imágenes</div>
+                    <input type="file" id="input-fotos" multiple accept="image/*" @change="manejarCambioFotos" :required="!modoEdicion">
+                    <div class="file-input-label">{{ modoEdicion ? 'Agregar Más Fotos' : 'Seleccionar Imágenes' }}</div>
                   </div>
                   <div class="preview-grid" v-if="vistaPreviaFotos.length > 0">
-                    <div v-for="(url, index) in vistaPreviaFotos" :key="index" class="previsualizacion-archivo">
+                    <div v-for="(url, index) in vistaPreviaFotos" :key="index" class="previsualizacion-archivo foto-preview-item">
                       <img :src="url" alt="Vista previa">
+                      <button type="button" @click="eliminarFotoNueva(index)" class="btn-eliminar-foto" title="Eliminar foto">
+                        <span>✕</span>
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -85,7 +106,8 @@
                     <span id="progress-text">{{ progresoAlbum }}%</span>
                 </div>
 
-                <button type="submit" class="btn-primary" :disabled="subiendoAlbum">Publicar Álbum</button>
+                <button type="submit" class="btn-primary" :disabled="subiendoAlbum">{{ modoEdicion ? 'Actualizar Álbum' : 'Publicar Álbum' }}</button>
+                <button v-if="modoEdicion" type="button" @click="cancelarEdicion" class="btn-secondary" style="margin-left: 1rem;">Cancelar</button>
                 <p v-if="mensajeAlbum" :class="tipoMensajeAlbum">{{ mensajeAlbum }}</p>
               </form>
 
@@ -103,7 +125,10 @@
                         <span>📸 {{ a.fotos.length }} fotos</span>
                       </div>
                    </div>
-                   <button @click="confirmarBorrado('album', a.id)" class="btn-delete">Eliminar</button>
+                   <div class="content-actions">
+                     <button @click="editarAlbum(a)" class="btn-edit">Editar</button>
+                     <button @click="confirmarBorrado('album', a.id)" class="btn-delete">Eliminar</button>
+                   </div>
                 </div>
               </div>
             </div>
@@ -125,7 +150,24 @@
                   </div>
                   <div class="form-group">
                     <label>Mes y Año</label>
-                    <input type="month" v-model="formularioDoc.mes" required>
+                    <div class="date-selector-row">
+                      <select v-model="mesSeleccionado" required>
+                        <option value="" disabled>Seleccionar Mes</option>
+                        <option value="01">Enero</option>
+                        <option value="02">Febrero</option>
+                        <option value="03">Marzo</option>
+                        <option value="04">Abril</option>
+                        <option value="05">Mayo</option>
+                        <option value="06">Junio</option>
+                        <option value="07">Julio</option>
+                        <option value="08">Agosto</option>
+                        <option value="09">Septiembre</option>
+                        <option value="10">Octubre</option>
+                        <option value="11">Noviembre</option>
+                        <option value="12">Diciembre</option>
+                      </select>
+                      <input type="number" v-model="anioSeleccionado" placeholder="Año" min="2000" max="2100" required>
+                    </div>
                   </div>
                 </div>
 
@@ -192,6 +234,40 @@
         </div>
       </div>
     </div>
+
+    <!-- MODAL CONFIRMACION ELIMINAR FOTO -->
+    <div class="modal-overlay" :class="{ 'active': modalEliminarFoto.activo }">
+      <div class="modal-container modal-small">
+        <div class="modal-header">
+           <h3>❌ Eliminar Foto</h3>
+        </div>
+        <div class="modal-body">
+          <p>¿Estás seguro de eliminar esta foto del álbum?</p>
+          <p class="modal-hint">La foto se eliminará al guardar los cambios.</p>
+        </div>
+        <div class="modal-footer">
+          <button @click="modalEliminarFoto.activo = false" class="btn-modal btn-modal-cancel">Cancelar</button>
+          <button @click="confirmarEliminarFoto" class="btn-modal btn-modal-confirm">Eliminar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL CONFIRMACION CERRAR SESION -->
+    <div class="modal-overlay" :class="{ 'active': modalCerrarSesion.activo }">
+      <div class="modal-container modal-small">
+        <div class="modal-header">
+           <h3>⚠️ Cerrar Sesión</h3>
+        </div>
+        <div class="modal-body">
+          <p>¿Estás seguro de que quieres cerrar la sesión?</p>
+          <p class="modal-hint">Cualquier cambio no guardado se perderá.</p>
+        </div>
+        <div class="modal-footer">
+          <button @click="modalCerrarSesion.activo = false" class="btn-modal btn-modal-cancel">Cancelar</button>
+          <button @click="cerrarSesion" class="btn-modal btn-modal-confirm">Cerrar Sesión</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -199,6 +275,7 @@
 import { ref, onMounted, reactive, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import api from '@/api/clienteApi';
+import { estadoSesion } from '@/utilidades/sesion';
 
 const router = useRouter();
 const usuario = ref(localStorage.getItem('usuario') || 'Administrador');
@@ -215,6 +292,10 @@ const subiendoAlbum = ref(false);
 const progresoAlbum = ref(0);
 const mensajeAlbum = ref('');
 const tipoMensajeAlbum = ref('');
+const modoEdicion = ref(false);
+const albumEditando = ref(null);
+const fotosExistentes = ref([]);
+const modalEliminarFoto = reactive({ activo: false, indice: null, esNueva: false });
 
 // Documentos
 const docs = ref([]);
@@ -225,6 +306,8 @@ const subiendoDoc = ref(false);
 const progresoDoc = ref(0);
 const mensajeDoc = ref('');
 const tipoMensajeDoc = ref('');
+const mesSeleccionado = ref('');
+const anioSeleccionado = ref(new Date().getFullYear());
 
 const esPdf = computed(() => {
   return formularioDoc.archivo && formularioDoc.archivo.type === 'application/pdf';
@@ -232,6 +315,7 @@ const esPdf = computed(() => {
 
 // Modal
 const modalBorrado = reactive({ activo: false, tipo: '', id: null });
+const modalCerrarSesion = reactive({ activo: false });
 
 async function cargarDatos() {
   try {
@@ -262,9 +346,14 @@ onMounted(() => {
   cargarDatos();
 });
 
+function abrirModalCerrarSesion() {
+  modalCerrarSesion.activo = true;
+}
+
 function cerrarSesion() {
   localStorage.removeItem('token');
   localStorage.removeItem('usuario');
+  estadoSesion.actualizar();
   router.push('/entrar');
 }
 
@@ -285,6 +374,66 @@ function manejarCambioFotos(e) {
   vistaPreviaFotos.value = archivos.map(f => URL.createObjectURL(f));
 }
 
+function eliminarFotoNueva(index) {
+  modalEliminarFoto.activo = true;
+  modalEliminarFoto.indice = index;
+  modalEliminarFoto.esNueva = true; // Flag para distinguir entre foto nueva y existente
+}
+
+
+function editarAlbum(album) {
+  modoEdicion.value = true;
+  albumEditando.value = album;
+  
+  // Poblar formulario con datos existentes
+  formularioAlbum.titulo = album.titulo;
+  formularioAlbum.fecha = album.fecha;
+  formularioAlbum.descripcion = album.descripcion || '';
+  formularioAlbum.fotos = []; // Las fotos nuevas se agregarán aquí
+  vistaPreviaFotos.value = [];
+  
+  // Cargar fotos existentes
+  fotosExistentes.value = [...album.fotos];
+  
+  // Scroll al formulario
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function eliminarFotoExistente(index) {
+  modalEliminarFoto.activo = true;
+  modalEliminarFoto.indice = index;
+  modalEliminarFoto.esNueva = false;
+}
+
+function confirmarEliminarFoto() {
+  if (modalEliminarFoto.indice !== null) {
+    if (modalEliminarFoto.esNueva) {
+      // Eliminar foto nueva de la vista previa
+      URL.revokeObjectURL(vistaPreviaFotos.value[modalEliminarFoto.indice]);
+      vistaPreviaFotos.value.splice(modalEliminarFoto.indice, 1);
+      formularioAlbum.fotos.splice(modalEliminarFoto.indice, 1);
+    } else {
+      // Eliminar foto existente
+      fotosExistentes.value.splice(modalEliminarFoto.indice, 1);
+    }
+  }
+  modalEliminarFoto.activo = false;
+  modalEliminarFoto.indice = null;
+  modalEliminarFoto.esNueva = false;
+}
+
+function cancelarEdicion() {
+  modoEdicion.value = false;
+  albumEditando.value = null;
+  formularioAlbum.titulo = '';
+  formularioAlbum.fecha = '';
+  formularioAlbum.descripcion = '';
+  formularioAlbum.fotos = [];
+  vistaPreviaFotos.value = [];
+  fotosExistentes.value = [];
+  mensajeAlbum.value = '';
+}
+
 async function crearAlbum() {
   subiendoAlbum.value = true;
   progresoAlbum.value = 0;
@@ -297,16 +446,29 @@ async function crearAlbum() {
     datosFormulario.append('descripcion', formularioAlbum.descripcion);
     formularioAlbum.fotos.forEach(f => datosFormulario.append('fotos', f));
 
-    await api.subir('/api/albumes', datosFormulario, (p) => {
-      progresoAlbum.value = p;
-    });
+    if (modoEdicion.value) {
+      // Enviar lista de fotos existentes que se deben mantener
+      datosFormulario.append('fotosExistentes', JSON.stringify(fotosExistentes.value));
+      
+      // Actualizar álbum existente
+      await api.subir(`/api/albumes/${albumEditando.value.id}`, datosFormulario, (p) => {
+        progresoAlbum.value = p;
+      }, 'PUT');
 
-    mensajeAlbum.value = 'Álbum creado con éxito.';
+      mensajeAlbum.value = 'Álbum actualizado con éxito.';
+    } else {
+      // Crear nuevo álbum
+      await api.subir('/api/albumes', datosFormulario, (p) => {
+        progresoAlbum.value = p;
+      });
+
+      mensajeAlbum.value = 'Álbum creado con éxito.';
+    }
+
     tipoMensajeAlbum.value = 'success-msg';
-    // Reiniciar
-    formularioAlbum.titulo = ''; formularioAlbum.fecha = ''; formularioAlbum.descripcion = ''; formularioAlbum.fotos = [];
-    vistaPreviaFotos.value.forEach(url => URL.revokeObjectURL(url));
-    vistaPreviaFotos.value = [];
+    
+    // Reiniciar formulario
+    cancelarEdicion();
     cargarDatos();
   } catch (e) {
     mensajeAlbum.value = e.mensaje || e.message;
@@ -339,6 +501,8 @@ async function crearDoc() {
   try {
     const datosFormulario = new FormData();
     datosFormulario.append('titulo', formularioDoc.titulo);
+    // Construir formato YYYY-MM
+    formularioDoc.mes = `${anioSeleccionado.value}-${mesSeleccionado.value}`;
     datosFormulario.append('mes', formularioDoc.mes);
 
     datosFormulario.append('documento', formularioDoc.archivo);
@@ -349,7 +513,11 @@ async function crearDoc() {
 
     mensajeDoc.value = 'Documento subido con éxito.';
     tipoMensajeDoc.value = 'success-msg';
-    formularioDoc.titulo = ''; formularioDoc.mes = ''; formularioDoc.archivo = null;
+    formularioDoc.titulo = ''; 
+    formularioDoc.mes = ''; 
+    formularioDoc.archivo = null;
+    mesSeleccionado.value = '';
+    anioSeleccionado.value = new Date().getFullYear();
     if (vistaPreviaDoc.value) {
       URL.revokeObjectURL(vistaPreviaDoc.value);
       vistaPreviaDoc.value = null;
@@ -477,18 +645,14 @@ async function borrarContenido() {
 }
 
 .admin-main {
-    padding: 2rem;
+    padding: 0rem 1rem 0rem 1rem;
     max-width: 1400px;
     margin: 0 auto;
 }
 
-.admin-dashboard {
-    margin-bottom: 2rem;
-}
-
 .admin-dashboard h2 {
     color: #003b88;
-    margin-bottom: 1.5rem;
+
     font-size: 1.8rem;
     border-bottom: none;
 }
@@ -497,7 +661,6 @@ async function borrarContenido() {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
     gap: 1.5rem;
-    margin-bottom: 2rem;
 }
 
 .stat-card {
@@ -609,6 +772,29 @@ async function borrarContenido() {
     font-size: 1rem;
 }
 
+.character-counter {
+    font-size: 0.85rem;
+    color: #666;
+    text-align: right;
+    margin-top: 0.25rem;
+}
+
+.character-counter.limit-warning {
+    color: #dc3545;
+    font-weight: 600;
+}
+
+
+.date-selector-row {
+  display: flex;
+  gap: 1rem;
+}
+
+.date-selector-row select,
+.date-selector-row input {
+  flex: 1;
+}
+
 .file-input-wrapper {
     position: relative;
 }
@@ -645,6 +831,14 @@ async function borrarContenido() {
     object-fit: cover;
     border-radius: 8px;
     border: 1px solid #ddd;
+}
+
+.foto-preview-item {
+    position: relative;
+}
+
+.foto-preview-item:hover .btn-eliminar-foto {
+    opacity: 1;
 }
 
 .previsualizacion-documento {
@@ -731,6 +925,26 @@ progress {
     flex-wrap: wrap;
 }
 
+.content-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.btn-edit {
+    padding: 0.5rem 1rem;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background-color 0.3s ease;
+}
+
+.btn-edit:hover {
+    background-color: #0056b3;
+}
+
 .btn-delete {
     background: #dc3545;
     color: white;
@@ -740,6 +954,77 @@ progress {
     font-weight: 600;
     cursor: pointer;
 }
+
+.btn-secondary {
+    padding: 0.75rem 1.5rem;
+    background-color: #6c757d;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background-color 0.3s ease;
+}
+
+.btn-secondary:hover {
+    background-color: #5a6268;
+}
+
+.fotos-existentes {
+    margin-bottom: 1rem;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.grid-fotos-existentes {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 0.75rem;
+}
+
+.foto-existente-item {
+    position: relative;
+    aspect-ratio: 1;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 2px solid #e0e0e0;
+}
+
+.foto-existente-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.btn-eliminar-foto {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 28px;
+    height: 28px;
+    background: rgba(220, 53, 69, 0.9);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.2s ease, background-color 0.2s ease;
+    font-size: 16px;
+    padding: 0;
+}
+
+.foto-existente-item:hover .btn-eliminar-foto {
+    opacity: 1;
+}
+
+.btn-eliminar-foto:hover {
+    background: rgba(220, 53, 69, 1);
+}
+
 
 .modal-overlay {
     display: none;
@@ -868,7 +1153,7 @@ progress {
     }
 
     .admin-main {
-        padding: 1rem;
+        padding: 0rem 1rem 0rem 1rem;
     }
 
     .tabs-header {

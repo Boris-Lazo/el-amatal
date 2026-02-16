@@ -20,6 +20,14 @@ router.get('/', (req, res, next) =>
   controladorAlbum.listarAlbumes(req, res, next)
 );
 
+router.put(
+  '/:id',
+  autenticacion,
+  subidaAlbum.array('fotos', 30),
+  validador(esquemaAlbum),
+  (req, res, next) => controladorAlbum.actualizarAlbum(req, res, next)
+);
+
 router.delete('/:id', autenticacion, (req, res, next) =>
   controladorAlbum.eliminarAlbum(req, res, next)
 );

@@ -77,6 +77,9 @@ onMounted(async () => {
 <style scoped>
 .eventos-page {
     padding-top: 100px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
 }
 
 .eventos-main {
@@ -188,6 +191,7 @@ onMounted(async () => {
     font-size: 0.95rem;
     line-height: 1.6;
     display: -webkit-box;
+    line-clamp: 3;
     -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;

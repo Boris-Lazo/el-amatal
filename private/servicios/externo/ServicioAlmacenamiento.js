@@ -26,39 +26,48 @@ class ServicioAlmacenamiento {
    * Guarda archivos de álbum procesándolos
    */
   async guardarArchivosAlbum(archivos, nombreCarpeta) {
-    const carpetaDestino = path.join(this.rutas.albumes, nombreCarpeta);
-    const archivosGuardados = [];
-
-    for (const archivo of archivos) {
-      const nombreBase = path.parse(archivo.originalname).name;
-      // Limpiar nombre para evitar caracteres extraños
-      const nombreLimpio = nombreBase.replace(/[^a-zA-Z0-9]/g, '_');
-      const nombreNuevo = `${Date.now()}_${nombreLimpio}.webp`;
-      const rutaDestino = path.join(carpetaDestino, nombreNuevo);
-
-      try {
-        await sharp(archivo.path)
-          .resize(1920, 1080, { fit: 'inside', withoutEnlargement: true })
-          .webp({ quality: 80 })
-          .toFile(rutaDestino);
-
-        archivosGuardados.push(nombreNuevo);
-
-        // Eliminar archivo temporal original
-        if (fs.existsSync(archivo.path)) {
-          fs.unlinkSync(archivo.path);
-        }
-      } catch (error) {
-        console.error(
-          `Error procesando imagen ${archivo.originalname}:`,
-          error
-        );
-        // Si falla, intentamos mover el original como respaldo (aunque sea jpg/png)
-        // O podríamos lanzar error. En este caso, continuamos con los siguientes.
-      }
+    if (!archivos || !Array.isArray(archivos) || archivos.length === 0) {
+      throw new Error('No se proporcionaron archivos para el álbum');
     }
 
-    return archivosGuardados;
+    const carpetaDestino = path.join(this.rutas.albumes, nombreCarpeta);
+    const archivosGuardados = [];
+    const archivosTemporales = [...archivos]; // Copia para limpieza garantizada
+
+    try {
+      for (const archivo of archivos) {
+        const nombreBase = path.parse(archivo.originalname).name;
+        // Limpiar nombre para evitar caracteres extraños
+        const nombreLimpio = nombreBase.replace(/[^a-zA-Z0-9]/g, '_');
+        const nombreNuevo = `${Date.now()}_${nombreLimpio}.webp`;
+        const rutaDestino = path.join(carpetaDestino, nombreNuevo);
+
+        try {
+          await sharp(archivo.path)
+            .resize(1920, 1080, { fit: 'inside', withoutEnlargement: true })
+            .webp({ quality: 80 })
+            .toFile(rutaDestino);
+
+          archivosGuardados.push(nombreNuevo);
+        } catch (error) {
+          console.error(
+            `Error procesando imagen ${archivo.originalname}:`,
+            error
+          );
+          // Continuar con las siguientes imágenes
+        }
+      }
+
+      // Si no se procesó ninguna imagen exitosamente, lanzar error
+      if (archivosGuardados.length === 0) {
+        throw new Error('No se pudo procesar ninguna imagen');
+      }
+
+      return archivosGuardados;
+    } finally {
+      // CRÍTICO: Siempre limpiar archivos temporales, incluso si hay errores
+      this.limpiarArchivosTemporales(archivosTemporales);
+    }
   }
 
   /**

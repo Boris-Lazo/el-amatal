@@ -24,10 +24,12 @@
     <main>
       <div class="secciones-verticales">
         <section>
-          <h2>📸 Eventos</h2>
-          <p>
-            Descubre los momentos más especiales de nuestra comunidad educativa.
-          </p>
+          <div class="index-section-header">
+            <h2>📸 Eventos</h2>
+            <p>
+              Descubre los momentos más especiales de nuestra comunidad educativa.
+            </p>
+          </div>
           <div id="latest-album-container">
             <div v-if="cargandoAlbum" class="loading-content">
               Cargando último evento...
@@ -76,10 +78,12 @@
         </section>
 
         <section>
-          <h2>📄 Documentos</h2>
-          <p>
-            Accede a los documentos de rendición de cuentas de nuestra institución.
-          </p>
+          <div class="index-section-header">
+            <h2>📄 Documentos</h2>
+            <p>
+              Accede a los documentos de rendición de cuentas de nuestra institución.
+            </p>
+          </div>
           <div id="latest-doc-container">
             <div v-if="cargandoDoc" class="loading-content">
               Cargando últimos documentos...
@@ -213,6 +217,27 @@ onMounted(async () => {
     padding: 1rem;
 }
 
+.secciones-verticales .tarjeta-estandar {
+    padding: 1rem;
+}
+
+/* Header de sección específico para index con borde abajo */
+.index-section-header {
+    border-bottom: 3px solid var(--color-fondo);
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.5rem;
+}
+
+.index-section-header h2 {
+    border-bottom: none !important;
+    margin-bottom: 0.5rem;
+    padding-bottom: 0;
+}
+
+.index-section-header p {
+    margin-bottom: 0.5rem;
+}
+
 /* Estilo específico para álbum en index */
 .tarjeta-album-index {
     cursor: pointer;
@@ -309,7 +334,6 @@ onMounted(async () => {
     border: 2px solid #003b88;
     border-radius: 8px;
     transition: all 0.3s ease;
-    margin-top: 1rem;
 }
 
 .link-ver-todos:hover {
@@ -322,7 +346,7 @@ onMounted(async () => {
 #latest-doc-container {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 1.5rem;
+    gap: 0rem 1rem;
     width: 100%;
 }
 
@@ -391,7 +415,7 @@ onMounted(async () => {
 /* El enlace debe ocupar todo el ancho en la parte inferior */
 .link-ver-todos {
     grid-column: 1 / -1;
-    justify-self: center;
+    justify-self: start;
     display: inline-block;
     color: #003b88;
     text-decoration: none;
