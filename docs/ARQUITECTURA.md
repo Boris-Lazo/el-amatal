@@ -54,9 +54,7 @@ graph TD
     API_Client -- "HTTP Fetch/XHR Req" --> Rutas
     Repositorios -- "SQL Queries" --> DB
     ServiciosExt -- "Write/Read" --> FS
-
----
-
+    
 ## 📂 Capas del Sistema (Backend)
 
 El backend está organizado en tres capas principales que separan las responsabilidades de forma estricta:
