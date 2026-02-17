@@ -6,40 +6,39 @@ Este documento describe detalladamente la estructura técnica, los patrones de d
 
 ## 📐 Diagrama de Arquitectura
 
-```mermaid
 graph TD
-    subgraph Cliente [Frontend (Vue.js 3)]
-        Vue[Componentes .vue]
-        Router[Vue Router]
-        API_Client[clienteApi.js (Fetch/XHR)]
+    subgraph Cliente ["Frontend (Vue.js 3)"]
+        Vue["Componentes .vue"]
+        Router["Vue Router"]
+        API_Client["clienteApi.js (Fetch/XHR)"]
 
         Vue --> Router
         Router --> API_Client
     end
 
-    subgraph Servidor [Backend (Node.js/Express)]
-        Server[servidor.js]
-        Container[contenedor.js]
+    subgraph Servidor ["Backend (Node.js/Express)"]
+        Server["servidor.js"]
+        Container["contenedor.js"]
 
-        subgraph CapaPresentacion [Capa de Presentación (HTTP)]
-            Rutas[Rutas (Express)]
-            Controladores[Controladores]
+        subgraph CapaPresentacion ["Capa de Presentación (HTTP)"]
+            Rutas["Rutas (Express)"]
+            Controladores["Controladores"]
         end
 
-        subgraph CapaNegocio [Capa de Lógica de Negocio]
-            Servicios[Servicios]
-            ServiciosExt[Servicios Externos: Correo, Imagen, Archivos]
+        subgraph CapaNegocio ["Capa de Lógica de Negocio"]
+            Servicios["Servicios"]
+            ServiciosExt["Servicios Externos: Correo, Imagen, Archivos"]
         end
 
-        subgraph CapaDatos [Capa de Acceso a Datos]
-            Repositorios[Repositorios]
+        subgraph CapaDatos ["Capa de Acceso a Datos"]
+            Repositorios["Repositorios"]
         end
 
-        Server -- Inicializa --> Container
-        Server -- Usa --> Rutas
-        Container -- Inyecta Dependencias --> Controladores
-        Container -- Inyecta Dependencias --> Servicios
-        Container -- Inyecta Dependencias --> Repositorios
+        Server -- "Inicializa" --> Container
+        Server -- "Usa" --> Rutas
+        Container -- "Inyecta Dependencias" --> Controladores
+        Container -- "Inyecta Dependencias" --> Servicios
+        Container -- "Inyecta Dependencias" --> Repositorios
 
         Rutas --> Controladores
         Controladores --> Servicios
@@ -47,15 +46,14 @@ graph TD
         Servicios --> ServiciosExt
     end
 
-    subgraph Persistencia [Almacenamiento]
+    subgraph Persistencia ["Almacenamiento"]
         DB[(SQLite3)]
-        FS[Sistema de Archivos /upload]
+        FS["Sistema de Archivos /upload"]
     end
 
-    API_Client -- HTTP Fetch/XHR Req --> Rutas
-    Repositorios -- SQL Queries --> DB
-    ServiciosExt -- Write/Read --> FS
-```
+    API_Client -- "HTTP Fetch/XHR Req" --> Rutas
+    Repositorios -- "SQL Queries" --> DB
+    ServiciosExt -- "Write/Read" --> FS
 
 ---
 
