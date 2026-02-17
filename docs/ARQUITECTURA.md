@@ -2,59 +2,60 @@
 
 Este documento describe detalladamente la estructura técnica, los patrones de diseño y la organización del **Proyecto Escuela**. El sistema ha sido diseñado bajo los principios **SOLID** y una **Arquitectura de Capas** para garantizar mantenibilidad, legibilidad y facilidad de pruebas.
 
----
-
 ## 📐 Diagrama de Arquitectura
 
+<pre>
+
 graph TD
-    subgraph Cliente ["Frontend (Vue.js 3)"]
-        Vue["Componentes .vue"]
-        Router["Vue Router"]
-        API_Client["clienteApi.js (Fetch/XHR)"]
+    subgraph Cliente [&quot;Frontend (Vue.js 3)&quot;]
+        Vue[&quot;Componentes .vue&quot;]
+        Router[&quot;Vue Router&quot;]
+        API_Client[&quot;clienteApi.js (Fetch/XHR)&quot;]
 
-        Vue --> Router
-        Router --> API_Client
+        Vue --&gt; Router
+        Router --&gt; API_Client
     end
 
-    subgraph Servidor ["Backend (Node.js/Express)"]
-        Server["servidor.js"]
-        Container["contenedor.js"]
+    subgraph Servidor [&quot;Backend (Node.js/Express)&quot;]
+        Server[&quot;servidor.js&quot;]
+        Container[&quot;contenedor.js&quot;]
 
-        subgraph CapaPresentacion ["Capa de Presentación (HTTP)"]
-            Rutas["Rutas (Express)"]
-            Controladores["Controladores"]
+        subgraph CapaPresentacion [&quot;Capa de Presentación (HTTP)&quot;]
+            Rutas[&quot;Rutas (Express)&quot;]
+            Controladores[&quot;Controladores&quot;]
         end
 
-        subgraph CapaNegocio ["Capa de Lógica de Negocio"]
-            Servicios["Servicios"]
-            ServiciosExt["Servicios Externos: Correo, Imagen, Archivos"]
+        subgraph CapaNegocio [&quot;Capa de Lógica de Negocio&quot;]
+            Servicios[&quot;Servicios&quot;]
+            ServiciosExt[&quot;Servicios Externos: Correo, Imagen, Archivos&quot;]
         end
 
-        subgraph CapaDatos ["Capa de Acceso a Datos"]
-            Repositorios["Repositorios"]
+        subgraph CapaDatos [&quot;Capa de Acceso a Datos&quot;]
+            Repositorios[&quot;Repositorios&quot;]
         end
 
-        Server -- "Inicializa" --> Container
-        Server -- "Usa" --> Rutas
-        Container -- "Inyecta Dependencias" --> Controladores
-        Container -- "Inyecta Dependencias" --> Servicios
-        Container -- "Inyecta Dependencias" --> Repositorios
+        Server -- &quot;Inicializa&quot; --&gt; Container
+        Server -- &quot;Usa&quot; --&gt; Rutas
+        Container -- &quot;Inyecta Dependencias&quot; --&gt; Controladores
+        Container -- &quot;Inyecta Dependencias&quot; --&gt; Servicios
+        Container -- &quot;Inyecta Dependencias&quot; --&gt; Repositorios
 
-        Rutas --> Controladores
-        Controladores --> Servicios
-        Servicios --> Repositorios
-        Servicios --> ServiciosExt
+        Rutas --&gt; Controladores
+        Controladores --&gt; Servicios
+        Servicios --&gt; Repositorios
+        Servicios --&gt; ServiciosExt
     end
 
-    subgraph Persistencia ["Almacenamiento"]
+    subgraph Persistencia [&quot;Almacenamiento&quot;]
         DB[(SQLite3)]
-        FS["Sistema de Archivos /upload"]
+        FS[&quot;Sistema de Archivos /upload&quot;]
     end
 
-    API_Client -- "HTTP Fetch/XHR Req" --> Rutas
-    Repositorios -- "SQL Queries" --> DB
-    ServiciosExt -- "Write/Read" --> FS
-    
+    API_Client -- &quot;HTTP Fetch/XHR Req&quot; --&gt; Rutas
+    Repositorios -- &quot;SQL Queries&quot; --&gt; DB
+    ServiciosExt -- &quot;Write/Read&quot; --&gt; FS
+</pre>
+
 ## 📂 Capas del Sistema (Backend)
 
 El backend está organizado en tres capas principales que separan las responsabilidades de forma estricta:
